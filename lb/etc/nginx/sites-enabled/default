@@ -1,0 +1,41 @@
+upstream varnishbackends {
+        ip_hash;
+        server varnish01.supportdesk.nu:80;
+}
+
+server {
+        listen 80;
+        return 301 https://$server_name$request_uri;
+}
+
+server {
+        listen              443 ssl http2;
+
+        server_name         the-shop.nu;
+
+        ssl_certificate     /etc/letsencrypt/live/the-shop.nu/fullchain.pem;
+        ssl_certificate_key  /etc/letsencrypt/live/the-shop.nu/privkey.pem;
+
+        # disable unsupported ciphers
+        ssl_ciphers AESGCM:HIGH:!aNULL:!MD5;
+
+        # ssl optimizations
+        ssl_session_cache shared:SSL:30m;
+        ssl_session_timeout 30m;
+        add_header Strict-Transport-Security "max-age=31536000";
+
+        location ~ /.well-known {
+                allow all;
+        }
+
+        location / {
+                proxy_set_header X-Real-IP  $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Port 443;
+                proxy_set_header Host $host;
+                proxy_pass http://varnishbackends;
+                proxy_redirect http://the-shop.nu https://the-shop.nu;
+        }
+}
+

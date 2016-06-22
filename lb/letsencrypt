@@ -1,0 +1,4 @@
+git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
+cd /opt/letsencrypt/
+./letsencrypt-auto certonly -a webroot --webroot-path=/var/www/html -d the-shop.nu -d www.the-shop.nu
+cd /etc/letsencrypt/live/
